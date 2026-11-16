@@ -1,1 +1,11 @@
-{"private":true,"type":"module","scripts":{"check":"node scripts/check.mjs","test":"node --test scripts/*.test.mjs"},"engines":{"node":">=20"}}
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/check.mjs && node scripts/check-provider-request-readiness.mjs",
+    "test": "node --test scripts/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

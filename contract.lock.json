@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/hatchertechnology/htp",
-  "revision": "fc5beb752d7fd47f46959e3c76e7f431cd5a6729",
+  "revision": "3db3e439ec0adc99211d49358a7cb8a29507a940",
   "pullRequest": 36,
   "files": {
     "scripts/plugin-contract.mjs": "cad9798593f413961781b2188590c7f57cf785926b84d143daf173068eda4d08",
@@ -10,5 +10,5 @@
     "docs/plugin-contract/v1/skills.lock.json": "241fbeffd1f9b36f82f7c90869d7ac70a8f3c40e04700b032acc0ed5386b3d83",
     "docs/plugin-contract/v1/hosts/codex.json": "09ecb7c071461e711900b6b463b311505b25f6ad8a54c1ba4bacc0ea9d92584b"
   },
-  "status": "provisional-unmerged-review-head"
+  "status": "merged-canonical"
 }

@@ -21,7 +21,7 @@ Offline observations are synthetic expected values. Passing proves validator/fix
 
 ## Pin and synchronization
 
-`contract.lock.json` pins HTP PR36 head fc5beb752d7fd47f46959e3c76e7f431cd5a6729 and SHA-256 for every copied artifact, including the executable validator and its tests. This is a provisional, unmerged review-head pin; delta review is pending. Final integration must repin to the accepted merged canonical revision before release. `npm run check` rejects local drift; `npm test` proves a modified inventory fails closed. This does not query the upstream branch for changes.
+`contract.lock.json` pins HTP PR36 head 3db3e439ec0adc99211d49358a7cb8a29507a940 and SHA-256 for every copied artifact, including the executable validator and its tests. This pins the merged canonical PR36 revision. Codex PR3 pin-only delta review remains required before integration. `npm run check` rejects local drift; `npm test` proves a modified inventory fails closed. This does not query the upstream branch for changes.
 
 To sync, review the canonical PR/revision first, extract the six listed paths from that exact git commit, recompute each SHA-256, update the revision assertion and lock in one reviewed change, and rerun both checks. Review operation additions/removals, host gates and skill hashes explicitly. The copied skills lock describes upstream source hashes; it does not certify that skills are installed locally. Before release refresh to the reviewed merged canonical revision. Rollback restores the last reviewed commit and lock together, then repeats offline and live acceptance. Do not track a mutable branch or silently regenerate expected fixtures from a live result.
 

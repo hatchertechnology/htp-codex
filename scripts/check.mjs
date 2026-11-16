@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {readJson,validateResults} from './plugin-contract.mjs';
 const lock=readJson(new URL('../contract.lock.json',import.meta.url));
-assert.equal(lock.revision,'fc5beb752d7fd47f46959e3c76e7f431cd5a6729');
+assert.equal(lock.revision,'3db3e439ec0adc99211d49358a7cb8a29507a940');
 for(const [path,hash] of Object.entries(lock.files)) {
  assert.ok(!path.includes('..') && !path.startsWith('/'));
  assert.equal(createHash('sha256').update(readFileSync(new URL('../'+path,import.meta.url))).digest('hex'),hash,`contract drift: ${path}`);

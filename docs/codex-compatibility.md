@@ -40,3 +40,44 @@ HTP #34 deployment, discovered provider input schemas and Codex host acceptance 
 No merge, deployment, issue closure, or production mutation is part of this work.
 
 The copied host profile is consumed by the checker for Codex identity, package status, OAuth method, minimum-version boundary, service readiness and open gates. Its canonical “README/license only” installation wording is stale: this repository now contains readiness docs/scripts but no installable package. Its desktop/managed-app authorization assertion is unverified here; separate CLI and connected-app evidence remains required. The canonical copy stays byte-identical until an upstream reviewed correction.
+
+## Additive 1.2 audit-export readiness
+
+The separate `contract/audit-export-1.2.lock.json` pins canonical HTP PR48 merge
+`6c065c8327970b0773ba90f163f99a6e56e1e204` and backend PR50 merge
+`ea8179af3d438f5cc88cf96260b06a23b88cfd18`. Twelve extracted files retain exact
+canonical bytes, including the four current skill/reference files. The checker
+verifies recursive inventory, hashes and source-lock parity before importing the
+semantic validator. Historical v1 and accepted 1.1 pins, artifacts and checks stay
+unchanged. This proves vendored-source readiness at those pins; installed skills,
+a host adapter and an installable package remain unverified. Codex #2 stays open.
+
+`node scripts/check-audit-export-readiness.mjs --export-results results.json`
+requires host `codex` and complete 1.2 observations for all 19 scenarios. All traces
+must supply context or all must omit it. Context-free results are labeled synthetic;
+all-context results are labeled measured-context assertions, with independent
+provenance verification required. Tests fabricate context; no live measurement is
+claimed. The 32 MiB CLI envelope and canonical 4 MiB source bounds constrain offline
+evidence only and do not change backend report limits.
+
+The canonical workflow preserves complete immutable detail bytes: start, chunk,
+verify length and snapshot SHA-256, decode retained raw `report_json` exactly, then
+close. A null raw field retains the stored JSONB fallback meaning. Snapshot SHA is
+transfer integrity, not ingestion provenance. EXPORT_REQUIRED explicitly migrates
+large inline callers; expiry, restart or another instance requires a fresh snapshot
+and complete restart without mixing bytes. Every call requires fresh owner/target
+checks. Export reads must not schedule collection or crawl work.
+
+The canonical profile's null backend revision and proposed status preserve its
+historical checkpoint. The Wave0 handoff separately records backend deployment and
+one hosted worker export success, with concurrency/affinity still unverified. Fresh
+owner token-heavy import timed out; its cause remains unresolved. Production tests
+remain paused and the SEOsmith v2 producer stays off. This companion performs no
+production requests and waives no acceptance gate. Schema rediscovery, actual Codex
+export/OAuth/installation/upgrade/rollback acceptance and HTP #34 remain open;
+SEOsmith still requires Codex adapter integration and live lifecycle acceptance.
+
+Sync future export profiles into a separately reviewed exact-pin tree and lock,
+review wire and source changes, and rerun all historical and additive checks.
+Rollback restores this companion's reviewed commit and lock together, then repeats
+required offline and host acceptance before activation.

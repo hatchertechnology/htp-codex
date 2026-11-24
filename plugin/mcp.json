@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "seosmith_local": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["./server/seosmith-operations-mcp.mjs"],
+      "cwd": ".",
+      "env_vars": ["PATH", "HOME", "SEOSMITH_BIN", "SEOSMITH_ROOT"],
+      "startup_timeout_sec": 10,
+      "tool_timeout_sec": 7200
+    }
+  }
+}

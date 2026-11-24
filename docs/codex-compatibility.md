@@ -81,3 +81,29 @@ Sync future export profiles into a separately reviewed exact-pin tree and lock,
 review wire and source changes, and rerun all historical and additive checks.
 Rollback restores this companion's reviewed commit and lock together, then repeats
 required offline and host acceptance before activation.
+
+## Additive 1.3 audit read readiness
+
+The separate `contract/audit-reads-1.3.lock.json` pins the merged HTP PR #82
+revision `4e7dc94` (verified tree `36a945c`) and the additive profile `1.3.0`.
+Fifteen extracted files retain exact canonical bytes, including the four current
+skill/reference files and the archived accepted 1.2 source. The checker verifies
+recursive inventory, hashes and source-lock parity before importing the canonical
+semantic validator. Historical v1, accepted 1.1 and accepted 1.2 pins, artifacts
+and checks stay unchanged. This proves vendored-source readiness at the merged
+pin; installed skills, a host adapter and an installable package remain unverified.
+
+The two reads (`website_audit_events`, `website_operational_episodes`) are
+additive, owner-scoped, collection-free stored reads. On the deployed 23-tool host
+they are absent from `tools/list` and stay `unsupported`; a missing tool is never an
+empty success. After the reviewed 25-tool source is deployed they return explicit
+`availability: producer_unavailable` while the H15 producer gates are disabled.
+That is not an empty history, a zero count or proof that no events exist. These
+reads never start collection, claim, processing or delivery.
+
+`node scripts/check-audit-read-readiness.mjs --audit-read-results results.json`
+requires host `codex` and complete 1.3 observations for all 16 scenarios. The
+synthetic default validates the canonical shape only. Tests mutate transcripts to
+reject missing capability, unpaired cursors, out-of-range limits, owner denial,
+erased producer availability and empty pages that erase explicit producer state.
+No backend, host, credential or producer is exercised. Codex #2 stays open.

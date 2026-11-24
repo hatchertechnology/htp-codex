@@ -12,7 +12,7 @@ test('marketplace points to a versioned Codex plugin with canonical HTP skills',
   assert.equal(market.plugins[0].name, manifest.name);
   assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
   assert.equal(manifest.skills, './skills/');
-  const source = new URL('contract/audit-export-1.2/plugins/htp/skills/', root);
+  const source = new URL('contract/audit-reads-1.3/plugins/htp/skills/', root);
   const target = new URL('plugin/skills/', root);
   function compare(dir = '') {
     for (const entry of readdirSync(new URL(dir, source), {withFileTypes:true})) {

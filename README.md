@@ -11,6 +11,10 @@ The separate nine-file `contract/provider-request-1.1/` tree pins canonical HTP 
 HTP activation requires deployed capability/input schemas and host acceptance. SEOsmith #18's initial adapter is completed; Live adapter configuration and lifecycle acceptance remain release gates for SEOsmith. Host OAuth and live operation acceptance remain open for both services.
 
 Additive audit-export 1.2 readiness vendors canonical PR48 separately from the
-immutable v1 and 1.1 baselines. `npm run check` covers all three profiles. Export
-fixtures are offline synthetic evidence; installed skills, OAuth, package and live
-host acceptance remain gated. Production tests remain paused; producer v2 stays off.
+immutable v1 and 1.1 baselines. Additive audit-read 1.3 readiness vendors the
+merged HTP PR #82 revision `4e7dc94` (tree `36a945c`) as a separate gated tree and
+lock. `npm run check` covers all four profiles. Export and read fixtures are offline
+synthetic evidence; installed skills, OAuth, package and live host acceptance remain
+gated. The two 1.3 reads are absent on the deployed 23-tool host (`unsupported`)
+and return explicit `availability: producer_unavailable` only after the reviewed
+25-tool source is deployed. Production tests remain paused; producer v2 stays off.

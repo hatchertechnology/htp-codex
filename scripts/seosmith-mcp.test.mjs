@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -216,6 +216,82 @@ test('bounded lifecycle returns synthetic saved data and a verified receipt', as
     const conflict = await client.call('seosmith_start', startArgs({ url: 'https://other.example/' }));
     assert.equal(conflict.isError, true);
     assert.equal(conflict.structuredContent.error, 'request_id_conflict');
+  } finally {
+    await client.close();
+  }
+});
+
+test('start rejects invalid bound types and ranges before invoking the adapter', async () => {
+  const { root, bin } = workspace();
+  const client = new Client({ SEOSMITH_BIN: bin, SEOSMITH_ROOT: root });
+  await client.init();
+  const statePath = join(root, UUID_A, 'run.sqlite.fixture-state.json');
+  const requestPath = join(root, UUID_A, 'request.json');
+  try {
+    const badBounds = [
+      { max_pages: 'x' },
+      { max_pages: 0 },
+      { max_pages: 20001 },
+      { max_pages: 1.5 },
+      { max_resources: -1 },
+      { max_resources: 20001 },
+      { max_resources: 1e12 },
+      { max_duration_seconds: 'x' },
+      { max_duration_seconds: 9 },
+      { max_duration_seconds: 7201 },
+      { max_duration_seconds: 1e12 },
+      { delay_ms: 999 },
+      { delay_ms: 60001 },
+      { delay_ms: 1.5 },
+      { check_external_links: 'false' },
+      { check_external_links: 0 },
+    ];
+    for (const overrides of badBounds) {
+      const result = await client.call('seosmith_start', startArgs(overrides));
+      assert.equal(result.isError, true, JSON.stringify(overrides));
+      assert.equal(result.structuredContent.error, 'invalid_bound', JSON.stringify(overrides));
+      assert.equal(existsSync(requestPath), false, JSON.stringify(overrides));
+      assert.equal(existsSync(statePath), false, JSON.stringify(overrides));
+    }
+    const badUrls = [
+      'not-a-url',
+      'ftp://example.com/',
+      'https://user:pass@example.com/',
+      'https://example.com:8443/',
+      'https://example.com/?q=1',
+      'https://example.com/#fragment',
+    ];
+    for (const url of badUrls) {
+      const result = await client.call('seosmith_start', startArgs({ url }));
+      assert.equal(result.isError, true, url);
+      assert.equal(result.structuredContent.error, 'invalid_url', url);
+      assert.equal(existsSync(requestPath), false, url);
+      assert.equal(existsSync(statePath), false, url);
+    }
+    assert.equal(existsSync(join(root, UUID_A)), false, 'no audit directory for rejected requests');
+  } finally {
+    await client.close();
+  }
+});
+
+test('changed-payload retry preserves the original request file', async () => {
+  const { root, bin } = workspace();
+  const client = new Client({ SEOSMITH_BIN: bin, SEOSMITH_ROOT: root });
+  await client.init();
+  const requestPath = join(root, UUID_A, 'request.json');
+  try {
+    const first = await client.call('seosmith_start', startArgs());
+    assert.equal(first.isError, false);
+    const original = readFileSync(requestPath);
+
+    const conflict = await client.call('seosmith_start', startArgs({ url: 'https://other.example/' }));
+    assert.equal(conflict.isError, true);
+    assert.equal(conflict.structuredContent.error, 'request_id_conflict');
+    assert.deepEqual(readFileSync(requestPath), original, 'conflict must not rewrite the retained request');
+
+    const identical = await client.call('seosmith_start', startArgs());
+    assert.equal(identical.isError, false);
+    assert.deepEqual(readFileSync(requestPath), original, 'identical retry must not rewrite the retained request');
   } finally {
     await client.close();
   }

@@ -45,6 +45,15 @@ const NIL_UUID = '00000000-0000-0000-0000-000000000000';
 const OUTPUT_NAME_RE = /^[A-Za-z0-9._-]{1,64}$/;
 const REQUEST_LIMIT = 16 * 1024;
 const REPORT_LIMIT = 16 * 1024 * 1024;
+// Documented adapter-v1 accepted ranges. These are enforced by the binding
+// before the adapter is invoked so a bad bound can never reach a live crawl.
+const START_BOUNDS = {
+  max_pages: [1, 20000],
+  max_resources: [0, 20000],
+  max_duration_seconds: [10, 7200],
+  delay_ms: [1000, 60000],
+};
+const START_TIMEOUT_GRACE_SEC = 30;
 const PROTOCOL_DEFAULT = '2025-06-18';
 const SUBPROCESS_ENV = {
   PATH: '/usr/bin:/bin',
@@ -269,6 +278,72 @@ function requireUuid(value) {
   return isUuid(value) ? null : 'invalid_identity';
 }
 
+function isValidSeedUrl(value) {
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return false;
+  }
+  return (
+    (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+    parsed.hostname.length > 0 &&
+    parsed.username === '' &&
+    parsed.password === '' &&
+    parsed.port === '' &&
+    parsed.search === '' &&
+    parsed.hash === ''
+  );
+}
+
+// Writes a request body without ever replacing an existing request file.
+// Returns 'written' | 'unchanged' | 'conflict' | 'unsafe'.
+function persistRequestFile(file, serialized) {
+  let existing = null;
+  try {
+    const stat = lstatSync(file);
+    if (stat.isSymbolicLink() || !stat.isFile()) return 'unsafe';
+    const fd = openSync(file, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+    try {
+      existing = readFileSync(fd);
+    } finally {
+      closeSync(fd);
+    }
+  } catch (e) {
+    if (e.code !== 'ENOENT') return 'unsafe';
+  }
+  if (existing !== null) {
+    return existing.equals(serialized) ? 'unchanged' : 'conflict';
+  }
+  try {
+    const fd = openSync(
+      file,
+      fsConstants.O_WRONLY | fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_NOFOLLOW,
+      0o600,
+    );
+    try {
+      writeFileSync(fd, serialized);
+    } finally {
+      closeSync(fd);
+    }
+    return 'written';
+  } catch (e) {
+    if (e.code !== 'EEXIST') return 'unsafe';
+    // Lost a creation race; compare against the file that won.
+    try {
+      const fd = openSync(file, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+      try {
+        existing = readFileSync(fd);
+      } finally {
+        closeSync(fd);
+      }
+    } catch {
+      return 'unsafe';
+    }
+    return existing.equals(serialized) ? 'unchanged' : 'conflict';
+  }
+}
+
 function auditPaths(root, requestId) {
   const dir = path.join(root, requestId);
   return {
@@ -330,18 +405,24 @@ async function handleStart(args) {
   if (!Number.isInteger(bindingGeneration) || bindingGeneration < 1) {
     return errorResult('invalid_binding_generation');
   }
-  const bounds = {
-    max_pages: args.max_pages,
-    max_resources: args.max_resources,
-    max_duration_seconds: args.max_duration_seconds,
-    delay_ms: args.delay_ms,
-    check_external_links: args.check_external_links,
-  };
-  for (const [field, value] of Object.entries(bounds)) {
+  for (const [field, [min, max]] of Object.entries(START_BOUNDS)) {
+    const value = args[field];
     if (value === undefined || value === null) return errorResult('explicit_bounds_required', field);
+    if (!Number.isInteger(value) || value < min || value > max) {
+      return errorResult('invalid_bound', field);
+    }
+  }
+  if (args.check_external_links === undefined || args.check_external_links === null) {
+    return errorResult('explicit_bounds_required', 'check_external_links');
+  }
+  if (typeof args.check_external_links !== 'boolean') {
+    return errorResult('invalid_bound', 'check_external_links');
   }
   if (typeof args.url !== 'string' || args.url.length === 0) {
     return errorResult('explicit_bounds_required', 'url');
+  }
+  if (!isValidSeedUrl(args.url)) {
+    return errorResult('invalid_url');
   }
   const request = {
     request_id: args.request_id,
@@ -359,20 +440,15 @@ async function handleStart(args) {
   const paths = auditPaths(state.root, args.request_id);
   try {
     ensureAuditDir(paths.dir);
-    const fd = openSync(
-      paths.request,
-      fsConstants.O_WRONLY | fsConstants.O_CREAT | fsConstants.O_TRUNC | fsConstants.O_NOFOLLOW,
-      0o600,
-    );
-    try {
-      writeFileSync(fd, serialized);
-    } finally {
-      closeSync(fd);
-    }
   } catch (e) {
     return errorResult('storage_error', String(e.message || e));
   }
-  const timeoutMs = (Number(args.max_duration_seconds) + 30) * 1000;
+  const persisted = persistRequestFile(paths.request, serialized);
+  if (persisted === 'conflict') return errorResult('request_id_conflict');
+  if (persisted !== 'written' && persisted !== 'unchanged') {
+    return errorResult('storage_error', 'request_write_failed');
+  }
+  const timeoutMs = (args.max_duration_seconds + START_TIMEOUT_GRACE_SEC) * 1000;
   const run = await runCommand(
     state.binary,
     ['--database', paths.database, 'operations', 'start', '--request', paths.request],
@@ -500,7 +576,7 @@ const TOOLS = [
   {
     name: 'seosmith_start',
     description:
-      'Start exactly one explicit bounded standalone local SEOsmith audit using a fresh non-nil request UUID and local website UUID. Requires every execution bound explicitly. Derives the private per-audit database from the request UUID. Start is synchronous; an identical retry returns the existing status. Grants no HTP access.',
+      'Start exactly one explicit bounded standalone local SEOsmith audit using a fresh non-nil request UUID and local website UUID. Requires every execution bound explicitly and validates its integer type, documented range, external-link boolean and HTTP(S) seed shape before the adapter is invoked. Derives the private per-audit database from the request UUID. Start is synchronous; an identical retry returns the existing status, while a changed payload preserves the stored request and is rejected as a conflict. Grants no HTP access.',
     inputSchema: {
       type: 'object',
       properties: {

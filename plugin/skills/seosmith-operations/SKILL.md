@@ -28,7 +28,10 @@ separate modes: neither is provided by these local tools, and a supplied website
 ID is not HTP authorization.
 
 Start only on explicit request and with explicit URL, page/resource/duration/delay
-limits and external-link choice. Create a fresh non-nil request UUID and a fresh
+limits and external-link choice. The binding rejects wrong-typed or out-of-range
+bounds and non-HTTP(S) seed URLs before it invokes the adapter, and a
+different payload for an existing request UUID is a conflict that leaves the
+retained request file untouched. Create a fresh non-nil request UUID and a fresh
 non-nil local website UUID; the binding derives a private per-audit database path
 from the request UUID under the operator root, so do not supply database or file
 paths. The website UUID and binding generation are local metadata and confer no

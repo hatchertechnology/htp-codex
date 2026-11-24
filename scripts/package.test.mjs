@@ -38,6 +38,11 @@ test('plugin manifest wires a typed local SEOsmith stdio MCP server', () => {
   assert.equal(server.cwd, '.');
   for (const name of ['PATH', 'SEOSMITH_BIN', 'SEOSMITH_ROOT']) assert.ok(server.env_vars.includes(name), name);
   assert.equal(server.default_tools_approval_mode, undefined, 'do not override host approvals');
+  assert.ok(Number.isInteger(server.tool_timeout_sec), 'tool timeout must be an integer');
+  assert.ok(
+    server.tool_timeout_sec > 7200 + 30,
+    'tool timeout must exceed the maximum bounded start plus the binding grace',
+  );
   assert.ok(existsSync(new URL('plugin/server/seosmith-operations-mcp.mjs', root)));
   const source = readFileSync(new URL('plugin/server/seosmith-operations-mcp.mjs', root), 'utf8');
   for (const text of ['seosmith_capabilities', 'seosmith_start', 'seosmith_status', 'seosmith_cancel', 'seosmith_report', 'seosmith_export', 'adapter_not_configured', 'separate_host_connection', 'shell: false']) assert.ok(source.includes(text), text);

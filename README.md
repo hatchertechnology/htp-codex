@@ -1,6 +1,6 @@
 # HTP and SEOsmith for Codex
 
-A candidate Codex marketplace package is included; see [package instructions and release gates](docs/wave1-package.md). Package 0.2.0 adds a typed local SEOsmith stdio MCP binding whose default mode is truthfully unavailable until an operator configures `SEOSMITH_BIN` and a private `SEOSMITH_ROOT`. Feature #2 remains open pending live service acceptance. Historical v1 golden checks and additive readiness profiles are retained.
+A candidate Codex marketplace package is included; see [package instructions and release gates](docs/wave1-package.md). Package 0.3.0 adds the capability-gated `lifecycle-remediation` skill for contract profile 1.4.0 (vendored from HTP `09a0ba56c175e3e889bfa5a8eacff01666851e39`, `contract/parity-reads-1.4`) and a declared host minimum of Codex CLI 0.171.0 (`host-minimum.json`; not enforced by the host, enforced by this repository's scripts). Package 0.2.0 added a typed local SEOsmith stdio MCP binding whose default mode is truthfully unavailable until an operator configures `SEOSMITH_BIN` and a private `SEOSMITH_ROOT`. Feature #2 remains open pending live service acceptance. Historical v1 golden checks and additive readiness profiles are retained.
 
 Run `npm run check` and `npm test` with Node 20+. No dependencies, credentials, or network are needed. See [compatibility and acceptance](docs/codex-compatibility.md).
 

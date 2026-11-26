@@ -32,7 +32,7 @@ import {
 import path from 'node:path';
 
 const BINDING_NAME = 'seosmith_local';
-const BINDING_VERSION = '0.2.0';
+const BINDING_VERSION = '0.3.0';
 const ADAPTER_OPERATIONS = [
   'seosmith.start',
   'seosmith.status',

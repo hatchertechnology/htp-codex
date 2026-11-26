@@ -3,7 +3,7 @@
 
 Uses a disposable CODEX_HOME and no account credentials. It:
 
-  1. installs the local marketplace and plugin through the real Codex 0.171.0
+  1. installs the local marketplace and plugin through the real Codex CLI
      CLI (actual package install),
   2. asks the Codex app-server to discover installed skills and the plugin's
      `seosmith_local` MCP server/tools (actual host discovery, no agent turn),
@@ -36,6 +36,7 @@ EXPECTED_SKILLS = {
     "htp:seo-review",
     "htp:website-management",
     "htp:seosmith-operations",
+    "htp:lifecycle-remediation",
 }
 EXPECTED_TOOLS = {
     "seosmith_capabilities",
@@ -47,6 +48,16 @@ EXPECTED_TOOLS = {
 }
 UUID_A = "b2a844c8-5bc9-49e5-bcf0-8fd1407d69f4"
 UUID_B = "4822f25e-af3c-4c60-a8c6-31bd99d2acda"
+
+
+def host_version_checked():
+    """Refuse a Codex CLI below the declared minimum in host-minimum.json (not host-enforced)."""
+    declared = json.loads((ROOT / "host-minimum.json").read_text())["codex-cli"]
+    out = subprocess.run(["codex", "--version"], check=True, capture_output=True, text=True, timeout=30).stdout
+    found = out.split()[-1]
+    if tuple(int(x) for x in found.split(".")) < tuple(int(x) for x in declared.split(".")):
+        raise SystemExit(f"codex-cli {found} is below the declared minimum {declared}")
+    return found
 
 
 class JsonRpc:
@@ -329,6 +340,7 @@ def main():
     args = parser.parse_args()
     if not shutil.which("codex"):
         raise SystemExit("codex CLI is not on PATH")
+    host = host_version_checked()
 
     with tempfile.TemporaryDirectory(prefix="htp-codex-mcp-smoke-") as home:
         base = Path(home)
@@ -342,7 +354,7 @@ def main():
         unavailable_default(server_script, base / "default")
         receipt = lifecycle(server_script, base / "fixture")
         line = (
-            "Codex 0.171.0 installed the plugin, discovered "
+            f"Codex {host} installed the plugin, discovered "
             f"{len(EXPECTED_SKILLS)} skills and {len(tools)} MCP tools "
             f"(serverInfo {server_info.get('name')} {server_info.get('version')}); "
             "synthetic lifecycle report/export matched with receipt "

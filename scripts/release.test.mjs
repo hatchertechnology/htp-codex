@@ -54,3 +54,18 @@ test('smoke scripts expect five skills and enforce the declared minimum', () => 
     assert.ok(src.includes('host-minimum.json'), f + ' must enforce the declared minimum');
   }
 });
+
+test('rehearsal and owner-prep scripts refuse an existing root and a root inside ~/.codex', async () => {
+  const { spawnSync } = await import('node:child_process');
+    const { tmpdir, homedir } = await import('node:os');
+  const { join } = await import('node:path');
+  const dir = tmpdir(); // exists already; nothing is created or removed here
+  {
+    for (const [script, extra] of [['rehearse-release-codex.mjs', ['--target', 'HEAD']], ['prepare-owner-acceptance-codex.mjs', ['--ref', 'v0.3.0']]]) {
+      for (const bad of [dir, join(homedir(), '.codex', 'never-created')]) {
+        const r = spawnSync(process.execPath, [new URL('./' + script, import.meta.url).pathname, '--root', bad, ...extra], { encoding: 'utf8', timeout: 20000 });
+        assert.notEqual(r.status, 0, `${script} must refuse ${bad}`);
+      }
+    }
+  }
+});

@@ -2,7 +2,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node scripts/check.mjs && node scripts/check-provider-request-readiness.mjs && node scripts/check-audit-export-readiness.mjs && node scripts/check-audit-read-readiness.mjs",
+    "check": "node scripts/check.mjs && node scripts/check-provider-request-readiness.mjs && node scripts/check-audit-export-readiness.mjs && node scripts/check-audit-read-readiness.mjs && node scripts/check-parity-read-readiness.mjs",
     "test": "node --test scripts/*.test.mjs"
   },
   "engines": {

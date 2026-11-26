@@ -8,8 +8,17 @@ import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
-EXPECTED = {"htp:repository-settings", "htp:seo-review", "htp:website-management", "htp:seosmith-operations"}
+EXPECTED = {"htp:repository-settings", "htp:seo-review", "htp:website-management", "htp:seosmith-operations", "htp:lifecycle-remediation"}
+def host_version_checked():
+    """Refuse a Codex CLI below the declared minimum in host-minimum.json (not host-enforced)."""
+    declared = json.loads((ROOT / "host-minimum.json").read_text())["codex-cli"]
+    out = subprocess.run(["codex", "--version"], check=True, capture_output=True, text=True, timeout=30).stdout
+    found = out.split()[-1]
+    if tuple(int(x) for x in found.split(".")) < tuple(int(x) for x in declared.split(".")):
+        raise SystemExit(f"codex-cli {found} is below the declared minimum {declared}")
+    return found
 
+HOST = host_version_checked()
 with tempfile.TemporaryDirectory(prefix="htp-codex-smoke-") as home:
     env = {**os.environ, "CODEX_HOME": home}
     def cli(*args):
@@ -57,7 +66,7 @@ with tempfile.TemporaryDirectory(prefix="htp-codex-smoke-") as home:
                     found.add(skill["name"])
         if found != EXPECTED:
             raise AssertionError(f"Installed skills differ: {found!r}")
-        print("Codex app-server discovered all four installed HTP skills; no services or agent turns invoked.")
+        print("Codex app-server discovered all five installed HTP skills (host " + HOST + "); no services or agent turns invoked.")
     finally:
         proc.terminate()
         proc.wait(timeout=10)

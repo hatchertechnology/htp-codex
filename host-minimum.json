@@ -1,0 +1,5 @@
+{
+  "codex-cli": "0.171.0",
+  "enforcedByHost": false,
+  "basis": "Lowest Codex CLI with recorded plugin lifecycle, MCP discovery and OAuth evidence for this package (2026-11-24). Codex 0.172.0 also passes the host smoke. The Codex plugin manifest has no enforced minimum-version field, so this floor is enforced only by this repository's host scripts and tests, not by the host at install time."
+}
